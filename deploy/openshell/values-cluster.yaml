@@ -1,0 +1,20 @@
+# Datacenter-shaped values. Authentication stays closed.
+# Point dataStorageClass and workspaceStorageClass at a block StorageClass
+# when the cluster has no default. OpenShell's SQLite volume needs block
+# storage, not NFS.
+replicaCount: 1
+
+workload:
+  kind: statefulset
+
+server:
+  telemetryEnabled: false
+  dataStorageSize: 10Gi
+  workspaceDefaultStorageSize: 5Gi
+  # dataStorageClass: "standard"
+  # workspaceStorageClass: "standard"
+  auth:
+    allowUnauthenticatedUsers: false
+
+# Fill OIDC from the OpenShell access-control docs before exposing the Service.
+# https://docs.nvidia.com/openshell/kubernetes/setup

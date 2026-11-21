@@ -1,0 +1,29 @@
+# Lab profile for Anthropic. Import it; OpenShell does not load profiles on startup.
+# The key is stored by the gateway. The sandbox process sees a placeholder in
+# ANTHROPIC_API_KEY, and the supervisor adds the real key only on api.anthropic.com.
+# Use an API key from console.anthropic.com.
+id: lab-anthropic
+display_name: Lab Anthropic
+description: Anthropic API for the OpenShell Kubernetes lab
+category: inference
+inference_capable: true
+credentials:
+  - name: api_key
+    description: Anthropic API key
+    env_vars: [ANTHROPIC_API_KEY]
+    required: true
+    auth_style: header
+    header_name: x-api-key
+discovery:
+  credentials: [api_key]
+endpoints:
+  - host: api.anthropic.com
+    port: 443
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+binaries:
+  - /usr/bin/curl
+  - /usr/local/bin/curl
+  - /usr/local/bin/python
+  - /usr/local/bin/python3

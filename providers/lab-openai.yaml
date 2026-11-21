@@ -1,0 +1,28 @@
+# Lab profile for OpenAI. Do not retarget this host at another OpenAI-compatible
+# server. A different host needs its own profile, otherwise the credential is
+# not carried to that host.
+id: lab-openai
+display_name: Lab OpenAI
+description: OpenAI API for the OpenShell Kubernetes lab
+category: inference
+inference_capable: true
+credentials:
+  - name: api_key
+    description: OpenAI API key
+    env_vars: [OPENAI_API_KEY]
+    required: true
+    auth_style: bearer
+    header_name: authorization
+discovery:
+  credentials: [api_key]
+endpoints:
+  - host: api.openai.com
+    port: 443
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+binaries:
+  - /usr/bin/curl
+  - /usr/local/bin/curl
+  - /usr/local/bin/python
+  - /usr/local/bin/python3

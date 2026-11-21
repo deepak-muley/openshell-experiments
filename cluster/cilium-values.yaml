@@ -1,0 +1,9 @@
+# Cilium as the only CNI, with kube-proxy left in place.
+# NetworkPolicy enforcement is on by default in Cilium.
+image:
+  pullPolicy: IfNotPresent
+ipam:
+  mode: kubernetes
+operator:
+  replicas: 1
+kubeProxyReplacement: false

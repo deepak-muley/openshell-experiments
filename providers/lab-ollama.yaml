@@ -1,0 +1,20 @@
+# Credential-less profile for an Ollama Service inside the cluster.
+# The host string must be the host the client dials. This matches
+# deploy/optional/ollama.yaml.
+id: lab-ollama
+display_name: Lab in-cluster Ollama
+description: OpenAI-compatible Ollama Service in the models namespace
+category: inference
+inference_capable: true
+credentials: []
+endpoints:
+  - host: ollama.models.svc.cluster.local
+    port: 11434
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+binaries:
+  - /usr/bin/curl
+  - /usr/local/bin/curl
+  - /usr/local/bin/python
+  - /usr/local/bin/python3

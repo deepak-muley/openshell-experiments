@@ -1,0 +1,14 @@
+# Local learning gateway. The CLI is accepted without OIDC because the only
+# route to this Service is a port-forward from your machine.
+# Use deploy/openshell/values-cluster.yaml on a shared or datacenter cluster.
+replicaCount: 1
+
+workload:
+  kind: statefulset
+
+server:
+  telemetryEnabled: false
+  dataStorageSize: 1Gi
+  workspaceDefaultStorageSize: 1Gi
+  auth:
+    allowUnauthenticatedUsers: true

@@ -1,0 +1,11 @@
+# Single-node kind cluster with the default CNI turned off.
+# scripts/10-kind-up.sh installs Cilium, which enforces NetworkPolicy.
+# kindnet accepts NetworkPolicy objects and does not enforce them, so OpenShell
+# sandbox isolation would be incomplete on a default kind cluster.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: openshell
+nodes:
+  - role: control-plane
+networking:
+  disableDefaultCNI: true
