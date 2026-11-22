@@ -38,21 +38,34 @@ python_bin() {
   die "need Python 3.9 or newer. python3 on PATH is missing or too old."
 }
 
-kube_context() {
-  kubectl config current-context
+# Cluster these scripts talk to. The default is kind-${CLUSTER_NAME}, which
+# does not follow kubectl's current context. CONFIRM_CLUSTER=1 selects the
+# current context for a cluster that is not this kind lab.
+lab_context() {
+  if [[ "${CONFIRM_CLUSTER:-}" == "1" ]]; then
+    kubectl config current-context
+    return
+  fi
+  printf 'kind-%s\n' "${CLUSTER_NAME}"
 }
+
+kube_context() { lab_context; }
 
 require_lab_context() {
   local ctx
-  ctx="$(kube_context)"
-  if [[ "${ctx}" == "kind-${CLUSTER_NAME}" ]]; then
-    return 0
-  fi
+  ctx="$(lab_context)"
   if [[ "${CONFIRM_CLUSTER:-}" == "1" ]]; then
     log "CONFIRM_CLUSTER=1, using context ${ctx}"
-    return 0
   fi
-  die "kubectl context is '${ctx}'. This lab writes to 'kind-${CLUSTER_NAME}' unless you set CONFIRM_CLUSTER=1."
+  # Do not pipe this into grep -q. grep exits at the first match, kubectl
+  # dies with SIGPIPE, and pipefail then reports the context as missing.
+  if ! kubectl config get-contexts "${ctx}" >/dev/null 2>&1; then
+    die "kubectl context '${ctx}' is missing. Create the cluster with: make kind"
+  fi
+}
+
+kube() {
+  kubectl --context "$(lab_context)" "$@"
 }
 
 # native: openshell is on PATH (Apple Silicon and Linux release assets).

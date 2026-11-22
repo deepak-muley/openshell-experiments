@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Run the OpenShell CLI for this lab.
+# Apple Silicon and Linux call the native binary on PATH.
+# Intel macOS has no published CLI, so this runs the Linux binary from
+# `make cli` inside Docker. See scripts/lib.sh.
+set -euo pipefail
+source "$(dirname "$0")/lib.sh"
+oscli "$@"

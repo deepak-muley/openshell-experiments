@@ -14,6 +14,7 @@ endpoints:
     access: read-write
     enforcement: enforce
 binaries:
+  - /bin/sh
   - /usr/bin/curl
   - /usr/local/bin/curl
   - /usr/local/bin/python

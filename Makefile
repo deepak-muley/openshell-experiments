@@ -1,4 +1,4 @@
-.PHONY: help prereqs cli kind install connect sample model demo down status
+.PHONY: help prereqs cli kind install connect sample ollama model demo down status
 
 help:
 	@printf '%s\n' \
@@ -8,7 +8,8 @@ help:
 	  'make install  install Agent Sandbox and the OpenShell chart' \
 	  'make connect  port-forward the gateway and select it in the CLI' \
 	  'make sample   build the probe image and create the sandbox' \
-	  'make model    optional model curl (MODEL=anthropic|openai|nvidia|ollama)' \
+	  'make ollama   start in-cluster Ollama and pull the pinned model' \
+	  'make model    call a model from a sandbox (default MODEL=ollama)' \
 	  'make status   show gateway and sandbox objects' \
 	  'make down     delete the kind cluster'
 
@@ -31,6 +32,9 @@ connect:
 
 sample:
 	./scripts/40-run-sample.sh
+
+ollama:
+	./scripts/55-ollama-up.sh
 
 model:
 	./scripts/50-model-check.sh

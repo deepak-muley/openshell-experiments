@@ -13,19 +13,20 @@ if [[ "$(kube_context)" != "kind-${CLUSTER_NAME}" ]]; then
 fi
 
 log "installing Agent Sandbox controller"
-kubectl apply -f "${AGENT_SANDBOX_MANIFEST}"
-kubectl -n agent-sandbox-system wait --for=condition=available deployment --all --timeout=180s
+kube apply -f "${AGENT_SANDBOX_MANIFEST}"
+kube -n agent-sandbox-system wait --for=condition=available deployment --all --timeout=180s
 
 log "installing OpenShell ${OPENSHELL_CHART_VERSION} with ${VALUES}"
-kubectl create namespace "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+kube create namespace "${NAMESPACE}" --dry-run=client -o yaml | kube apply -f -
 helm upgrade --install openshell \
   "oci://ghcr.io/nvidia/openshell/helm-chart" \
+  --kube-context "$(lab_context)" \
   --version "${OPENSHELL_CHART_VERSION}" \
   --namespace "${NAMESPACE}" \
   --values "${VALUES}" \
   --wait \
   --timeout 12m
 
-kubectl -n "${NAMESPACE}" rollout status statefulset/openshell --timeout=180s
-kubectl -n "${NAMESPACE}" get pods,svc,pvc
+kube -n "${NAMESPACE}" rollout status statefulset/openshell --timeout=180s
+kube -n "${NAMESPACE}" get pods,svc,pvc
 log "gateway is up"

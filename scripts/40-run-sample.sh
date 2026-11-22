@@ -81,7 +81,7 @@ for _ in $(seq 1 40); do
 done
 
 log "sandbox objects"
-kubectl -n "${NAMESPACE}" get pods,sandboxes,svc,pvc,networkpolicy || true
+kube -n "${NAMESPACE}" get pods,sandboxes,svc,pvc,networkpolicy || true
 echo
 oscli sandbox get "${SAMPLE_SANDBOX_NAME}" || true
 echo
@@ -92,12 +92,12 @@ fi
 
 if [[ "${found}" != "1" ]]; then
   log "probe line was not in openshell logs yet; dumping sandbox pod logs"
-  kubectl -n "${NAMESPACE}" get pods -o name | while read -r pod; do
+  kube -n "${NAMESPACE}" get pods -o name | while read -r pod; do
     case "${pod}" in
       pod/openshell-0|pod/openshell-*) continue ;;
     esac
     echo "-- ${pod}"
-    kubectl -n "${NAMESPACE}" logs "${pod}" --all-containers --tail=200 || true
+    kube -n "${NAMESPACE}" logs "${pod}" --all-containers --tail=200 || true
   done
   die "the probe did not report SAMPLE_AGENT_RESULT. See the logs above."
 fi

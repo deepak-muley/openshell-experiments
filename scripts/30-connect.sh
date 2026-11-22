@@ -13,11 +13,11 @@ bundle="${HOME}/.config/openshell/gateways/${GATEWAY_NAME}/mtls"
 mkdir -p "${bundle}"
 chmod 700 "${HOME}/.config/openshell" "${HOME}/.config/openshell/gateways" "${HOME}/.config/openshell/gateways/${GATEWAY_NAME}" "${bundle}"
 
-"${PYTHON}" - "${NAMESPACE}" "${bundle}" <<'PY'
+"${PYTHON}" - "${NAMESPACE}" "${bundle}" "$(lab_context)" <<'PY'
 import base64, json, pathlib, subprocess, sys
-namespace, dest = sys.argv[1], pathlib.Path(sys.argv[2])
+namespace, dest, context = sys.argv[1], pathlib.Path(sys.argv[2]), sys.argv[3]
 raw = subprocess.check_output([
-    "kubectl", "-n", namespace, "get", "secret", "openshell-client-tls", "-o", "json",
+    "kubectl", "--context", context, "-n", namespace, "get", "secret", "openshell-client-tls", "-o", "json",
 ])
 data = json.loads(raw)["data"]
 for key, filename in (("ca.crt", "ca.crt"), ("tls.crt", "tls.crt"), ("tls.key", "tls.key")):
@@ -33,9 +33,9 @@ else
   bind="$(port_forward_address)"
   log "port-forward ${bind}:${GATEWAY_PORT} -> svc/openshell:8080"
   # Detach from this shell so the forward keeps running after the script exits.
-  "${PYTHON}" - "${pidfile}" "${STATE}/port-forward.log" "${NAMESPACE}" "${bind}" "${GATEWAY_PORT}" <<'PY'
+  "${PYTHON}" - "${pidfile}" "${STATE}/port-forward.log" "${NAMESPACE}" "${bind}" "${GATEWAY_PORT}" "$(lab_context)" <<'PY'
 import os, subprocess, sys
-pidfile, logpath, namespace, bind, port = sys.argv[1:]
+pidfile, logpath, namespace, bind, port, context = sys.argv[1:]
 if os.fork() > 0:
     os._exit(0)
 os.setsid()
@@ -43,7 +43,7 @@ if os.fork() > 0:
     os._exit(0)
 log = open(logpath, "ab", buffering=0)
 proc = subprocess.Popen(
-    ["kubectl", "-n", namespace, "port-forward", "--address", bind,
+    ["kubectl", "--context", context, "-n", namespace, "port-forward", "--address", bind,
      "svc/openshell", f"{port}:8080"],
     stdin=subprocess.DEVNULL,
     stdout=log,

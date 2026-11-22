@@ -1,5 +1,20 @@
 # The probe sandbox
 
+`make demo` does not post a prompt, and it does not ask a model to solve anything. It stands up the cluster and runs a fixed script inside a sandbox so you can see the boundary.
+
+`make demo` runs these targets in order:
+
+| Target | What it does |
+| --- | --- |
+| `prereqs` | Checks for Docker, kind, kubectl, Helm, curl, and Python 3.9+ |
+| `cli` | Installs the OpenShell CLI. On Intel macOS that is the Linux binary run by `./scripts/openshell` |
+| `kind` | Creates the `openshell` kind cluster and installs Cilium |
+| `install` | Installs the Agent Sandbox controller and the OpenShell gateway |
+| `connect` | Port-forwards the gateway and selects it in the CLI |
+| `sample` | Builds the probe image and starts sandbox `sample-agent` |
+
+The process in that sandbox is `samples/probe-agent/agent.py`. It has no prompt and no model. It writes `/sandbox/hello.txt`, tries to write `/etc`, curls `https://example.com` (allowed) and `https://example.org` (denied), and prints `SAMPLE_AGENT_RESULT=pass` or `SAMPLE_AGENT_RESULT=fail`. A prompt you want a model to answer is `make model` in [05-models.md](05-models.md). If `./scripts/openshell sandbox get sample-agent` shows `Phase: Error`, that is the kernel check in [08-troubleshooting.md](08-troubleshooting.md).
+
 `samples/probe-agent` is the working example. It is a normal container. OpenShell is what turns it into a sandbox.
 
 ```bash
@@ -9,7 +24,7 @@ make sample
 The script builds `docker.io/library/openshell-sample-agent:0.1.0`, loads it into the kind node, and creates a detached sandbox:
 
 ```bash
-openshell sandbox create \
+./scripts/openshell sandbox create \
   --name sample-agent \
   --from docker.io/library/openshell-sample-agent:0.1.0 \
   --policy policies/sample-agent.yaml \
@@ -44,13 +59,17 @@ The policy file is `policies/sample-agent.yaml`. The network rule names `/usr/bi
 After create, the `openshell` namespace gains a `Sandbox`, a workload pod, a supervisor pod, a Service for the boundary, a workspace PVC, and NetworkPolicies. Useful commands:
 
 ```bash
-kubectl --context kind-openshell -n openshell get pods,sandboxes,pvc,networkpolicy
-openshell sandbox get sample-agent
-openshell logs sample-agent
-openshell policy get sample-agent
+kubectl config use-context kind-openshell
+kubectl -n openshell get pods,sandboxes,pvc,networkpolicy
+make connect
+./scripts/openshell sandbox get sample-agent
+./scripts/openshell logs sample-agent
+./scripts/openshell policy get sample-agent
 ```
 
 The workspace file `/sandbox/report.json` holds the same four checks. It lives on the PVC for the life of that sandbox record.
+
+After the process exits the Sandbox stays and the pods do not. [09-look-around.md](09-look-around.md) is the full set of commands for the node, Cilium, the controller, the gateway, and this sandbox.
 
 ## Again
 

@@ -17,7 +17,7 @@ The kind cluster is a stand-in. The gateway chart, the Agent Sandbox controller,
 
 ## Install
 
-Point kubectl at the cluster and confirm you mean it. The scripts will not install into a random context.
+Lab commands target `kind-openshell` and leave your current kubectl context alone. Point kubectl at the other cluster and set `CONFIRM_CLUSTER=1` when that cluster is the one you mean.
 
 ```bash
 export CONFIRM_CLUSTER=1

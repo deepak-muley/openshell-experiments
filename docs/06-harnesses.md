@@ -11,7 +11,7 @@ The filesystem baseline is `policies/agent-filesystem.yaml`. Attach a provider f
 Hermes, from Nous Research, is a harness that keeps skills as you correct it. NemoClaw's Hermes blueprint starts it with `hermes gateway run` behind OpenShell's proxy and writes a managed config at startup. On this cluster you do the same job with the CLI:
 
 ```bash
-openshell sandbox create \
+./scripts/openshell sandbox create \
   --name hermes \
   --from registry.example.com/team/hermes-agent:1.0 \
   --policy policies/agent-filesystem.yaml \
@@ -23,14 +23,14 @@ openshell sandbox create \
   -- hermes gateway run
 ```
 
-Use the command your image actually expects. If the binary is `/usr/local/bin/hermes`, that path belongs in the provider profile. Interactive use is `openshell sandbox exec -n hermes --tty -- /bin/bash` or an attach, depending on whether the main process is the agent itself.
+Use the command your image actually expects. If the binary is `/usr/local/bin/hermes`, that path belongs in the provider profile. Interactive use is `./scripts/openshell sandbox exec -n hermes --tty -- /bin/bash` or an attach, depending on whether the main process is the agent itself.
 
 ## LangChain Deep Agents
 
 Deep Agents Code is the terminal coding harness. The NemoClaw blueprint calls it `dcode`, with `dcode -n` for a headless turn, and writes config under `/sandbox/.deepagents`. `/sandbox` is already the writable workspace on Kubernetes, so that state lands on the PVC and survives a pod restart.
 
 ```bash
-openshell sandbox create \
+./scripts/openshell sandbox create \
   --name deepagents \
   --from registry.example.com/team/deepagents:1.0 \
   --policy policies/agent-filesystem.yaml \
@@ -49,7 +49,7 @@ The provider profile has to name the `dcode` binary, not only `curl`, when `dcod
 OpenClaw is the default harness in NemoClaw's blueprints: files, tools, subagents, and a long-lived session. Treat it like the others. The image contains OpenClaw, the main process is OpenClaw's server or gateway command, and the provider profile lists that Node (or other) binary.
 
 ```bash
-openshell sandbox create \
+./scripts/openshell sandbox create \
   --name openclaw \
   --from registry.example.com/team/openclaw:1.0 \
   --policy policies/agent-filesystem.yaml \
@@ -72,9 +72,11 @@ NemoClaw's CLI (`nemoclaw`, or `nemo-deepagents` for the Deep Agents path) is a 
 Do not bake `ANTHROPIC_API_KEY` or `NVIDIA_API_KEY` into the harness image or into a Kubernetes Secret mounted by the workload. Create the provider from your shell so the gateway stores the key, and attach it with `--provider`. The process environment receives a placeholder. The supervisor adds the real header only when the request matches the profile.
 
 ```bash
-openshell provider list
-openshell sandbox provider list hermes
-openshell policy get hermes --full
+kubectl config use-context kind-openshell
+make connect
+./scripts/openshell provider list
+./scripts/openshell sandbox provider list hermes
+./scripts/openshell policy get hermes --full
 ```
 
-A new process picks up a provider attached after the sandbox started. A process that is already running keeps the environment it was given. Start a new exec after `openshell sandbox provider attach`.
+A new process picks up a provider attached after the sandbox started. A process that is already running keeps the environment it was given. Start a new exec after `./scripts/openshell sandbox provider attach`.

@@ -40,19 +40,22 @@ make connect
 
 `make cli` runs upstream's installer at `OPENSHELL_CLI_VERSION`. The installer also starts a user-level gateway on your machine (port 17670 on macOS via Homebrew). The lab does not use that gateway for sandboxes.
 
-Intel macOS has no published OpenShell CLI build. On that machine `make cli` downloads the Linux musl binary and the scripts run it with Docker. The port-forward then listens on `0.0.0.0` so the container can reach it at `host.docker.internal`, which is already on the gateway certificate. Apple Silicon and Linux keep the native CLI and a `127.0.0.1` port-forward.
+Apple Silicon and Linux get a native `openshell` binary on `PATH`. Intel macOS does not: NVIDIA publishes no `x86_64-apple-darwin` build, so the installer exits with `Intel macOS is not supported`. `make cli` then downloads `openshell-x86_64-unknown-linux-musl` into `.state/cli/openshell` and the lab runs that binary in a Docker container. Typing `openshell` in your shell still fails. Use the wrapper, which picks the native binary or the container.
 
-`make connect` copies the in-cluster client bundle to `~/.config/openshell/gateways/kind/mtls`, port-forwards `svc/openshell` to port 18080, and runs:
+`make connect` does not require the current context to be `kind-openshell`. Switch anyway when you want plain `kubectl` and `k get pods -A` to read this lab:
 
 ```bash
-openshell gateway add https://127.0.0.1:18080 --local --name kind
-openshell gateway select kind
-openshell status
+kubectl config use-context kind-openshell
+make connect
+./scripts/openshell status
+./scripts/openshell sandbox get sample-agent
+./scripts/openshell logs sample-agent
+./scripts/openshell policy get sample-agent
 ```
 
-Keep that port-forward running while you use the CLI. `make connect` records its pid in `.state/port-forward.pid`. `make down` stops it.
+`make connect` copies the in-cluster client bundle to `~/.config/openshell/gateways/kind/mtls`, port-forwards `svc/openshell` to port 18080, and selects that gateway. On Intel macOS the forward listens on `0.0.0.0` and the wrapper registers `https://host.docker.internal:18080`, because `127.0.0.1` inside the container is the container itself. The gateway certificate already includes `host.docker.internal`. Apple Silicon and Linux keep a `127.0.0.1` forward and register `https://127.0.0.1:18080`. The wrapper mounts `~/.config/openshell` and this repo into the container, so gateway config and policy files are the same ones the scripts use.
 
-The server certificate includes `localhost` and `127.0.0.1`, so the port-forward verifies without an extra flag.
+Keep that port-forward running while you use the CLI. `make connect` records its pid in `.state/port-forward.pid`. `make down` stops it. Docker Desktop has to be running for every `./scripts/openshell` call on Intel macOS.
 
 ## Upgrade
 

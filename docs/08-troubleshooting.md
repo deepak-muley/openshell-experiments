@@ -36,6 +36,26 @@ The installer starts a local gateway and may select it. `openshell gateway list`
 - Workspace PVC Pending. Same StorageClass issue as the gateway.
 - Landlock or seccomp rejected by the node kernel. The supervisor log has the reason: `kubectl -n openshell logs -l openshell.ai/component=supervisor --tail=100`.
 
+## `sandbox get` says Phase Error
+
+`./scripts/openshell sandbox get sample-agent` can show `Phase: Error` with all of these at once:
+
+| Condition | What it means |
+| --- | --- |
+| `Finished: PodFailed` | The workload pod exited. On this kernel that happens a few seconds after `PodScheduled` |
+| `Ready: ImagePreparationTimedOut` | The gateway waited for a runtime that never became ready, then hit its deadline |
+| `ConfigurationReady: ConfigurationPending` | Effective policy was never validated because that runtime did not stay up |
+| `Suspended: PodTerminated` | The Sandbox record remains. The workload and supervisor pods are gone |
+
+The policy block printed under the sandbox loaded. It is not the failure. On kind, confirm the kernel:
+
+```bash
+docker exec openshell-control-plane uname -r
+docker exec openshell-control-plane sh -c 'zcat /proc/config.gz | grep LANDLOCK'
+```
+
+`5.15.49-linuxkit` with `# CONFIG_SECURITY_LANDLOCK is not set` is the cause. The next section is the runtime message. `make model` hits the same wall before it creates `model-ollama`. Ollama in the `models` namespace does not.
+
 ## The workload pod logs `Landlock ABI probe`
 
 OpenShell 0.1.9 stops the sandbox runtime unless the node kernel provides Landlock ABI v3. That is Linux 6.2 or newer, built with `CONFIG_SECURITY_LANDLOCK=y`. `landlock.compatibility: best_effort` in the policy file does not skip this probe.

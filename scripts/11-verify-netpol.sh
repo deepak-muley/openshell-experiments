@@ -12,16 +12,16 @@ OPEN_POD=openshell-curl-allow
 IMAGE=curlimages/curl:8.11.1
 
 cleanup() {
-  kubectl delete namespace "${NS}" --wait=false >/dev/null 2>&1 || true
-  kubectl -n default delete pod "${OPEN_POD}" --wait=false >/dev/null 2>&1 || true
+  kube delete namespace "${NS}" --wait=false >/dev/null 2>&1 || true
+  kube -n default delete pod "${OPEN_POD}" --wait=false >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
-kubectl delete namespace "${NS}" --wait=true >/dev/null 2>&1 || true
-kubectl -n default delete pod "${OPEN_POD}" --wait=true >/dev/null 2>&1 || true
+kube delete namespace "${NS}" --wait=true >/dev/null 2>&1 || true
+kube -n default delete pod "${OPEN_POD}" --wait=true >/dev/null 2>&1 || true
 
-kubectl create namespace "${NS}"
-kubectl -n "${NS}" apply -f - <<'EOF'
+kube create namespace "${NS}"
+kube -n "${NS}" apply -f - <<'EOF'
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -32,11 +32,11 @@ spec:
     - Egress
 EOF
 
-kubectl -n "${NS}" run "${POD}" \
+kube -n "${NS}" run "${POD}" \
   --image="${IMAGE}" \
   --restart=Never \
   --command -- curl -fsS --max-time 8 -o /dev/null https://example.com
-kubectl -n default run "${OPEN_POD}" \
+kube -n default run "${OPEN_POD}" \
   --image="${IMAGE}" \
   --restart=Never \
   --command -- curl -fsS --max-time 8 -o /dev/null https://example.com
@@ -44,7 +44,7 @@ kubectl -n default run "${OPEN_POD}" \
 phase_of() {
   local ns="$1"
   local pod="$2"
-  kubectl -n "${ns}" get pod "${pod}" -o jsonpath='{.status.phase}' 2>/dev/null || true
+  kube -n "${ns}" get pod "${pod}" -o jsonpath='{.status.phase}' 2>/dev/null || true
 }
 
 deadline=$((SECONDS + 180))
@@ -64,7 +64,7 @@ done
 log "deny-namespace pod phase=${deny_phase:-unknown}  open-namespace pod phase=${allow_phase:-unknown}"
 
 if [[ "${allow_phase}" != "Succeeded" ]]; then
-  kubectl -n default logs "${OPEN_POD}" || true
+  kube -n default logs "${OPEN_POD}" || true
   die "the open pod could not reach example.com, so this check cannot tell whether NetworkPolicy is enforced."
 fi
 
